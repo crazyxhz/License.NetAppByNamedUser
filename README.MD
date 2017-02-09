@@ -14,7 +14,7 @@ This demo will show you step by step setup of OAuth authentication using ArcGIS 
 4. Select Application type. Fill in title and tags as you need.
 ![](https://ooo.0o0.ooo/2017/02/09/589c26c1d9357.jpg)
 5. After Application has been added. Click the item you just added. Click Settings tab.
-![](https://ooo.0o0.ooo/2017/02/09/589c2729ae747.jpg)
+![](https://ooo.0o0.ooo/2017/02/09/589c28a7e4fcc.jpg)
 6. Scroll to the bottom. Click Registered Info to check you Oauth app Client Id stuff.
 ![](https://ooo.0o0.ooo/2017/02/09/589c276e46c4f.jpg)
 7. Fill Registered Info into your code match the infos on the web:
