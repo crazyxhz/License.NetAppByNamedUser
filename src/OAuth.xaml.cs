@@ -1,23 +1,15 @@
-﻿// Copyright 2016 Esri.
-//
-// Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an 
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific 
-// language governing permissions and limitations under the License.
-
-using Esri.ArcGISRuntime.Mapping;
+﻿using Esri.ArcGISRuntime.Mapping;
 using Esri.ArcGISRuntime.Portal;
 using Esri.ArcGISRuntime.Security;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 
-namespace OAuth
+namespace ArcGISApp2
 {
     public partial class MainWindow : Window
     {
@@ -46,8 +38,42 @@ namespace OAuth
             // Set up the AuthenticationManager to use OAuth for secure ArcGIS Online requests
             UpdateAuthenticationManager();
 
+            license();
             // Display a secured web map from ArcGIS Online (will be challenged to log in)
             DisplaySecureMap();
+        }
+
+        private async void license()
+        {
+            // Challenge the user for portal credentials (OAuth credential request for arcgis.com)
+            CredentialRequestInfo loginInfo = new CredentialRequestInfo();
+
+            // Use the OAuth implicit grant flow
+            loginInfo.GenerateTokenOptions = new GenerateTokenOptions
+            {
+                TokenAuthenticationType = TokenAuthenticationType.OAuthImplicit
+            };
+
+            // Indicate the url (portal) to authenticate with (ArcGIS Online)
+            loginInfo.ServiceUri = new Uri("https://www.arcgis.com/sharing/rest");
+
+
+            // Call GetCredentialAsync on the AuthenticationManager to invoke the challenge handler
+            Credential cred = await AuthenticationManager.Current.GetCredentialAsync(loginInfo, false);
+
+            // Connect to the portal (ArcGIS Online) using the credential
+            ArcGISPortal arcgisPortal = await ArcGISPortal.CreateAsync(loginInfo.ServiceUri, cred);
+
+            // Get LicenseInfo from the portal
+            Esri.ArcGISRuntime.LicenseInfo licenseInfo = arcgisPortal.PortalInfo.LicenseInfo;
+            var licenseJson = licenseInfo.ToJson();
+            using (StreamWriter outputFile = new StreamWriter(@"lincese.json"))
+            {
+                outputFile.WriteLine(licenseJson);
+            }
+            // ... code here to license the app immediately and/or save the license (JSON string) to take the app offline ...
+            // License the app using the license info
+            Esri.ArcGISRuntime.ArcGISRuntimeEnvironment.SetLicense(licenseInfo);
         }
 
         private void UpdateAuthenticationManager()
@@ -92,8 +118,13 @@ namespace OAuth
             // challenge for credentials
             try
             {
+
+
+                // ... code here to license the app immediately and/or save the license (JSON string) to take the app offline ...
+                // License the app using the license info
                 // Connect to a portal (ArcGIS Online, for example)
                 ArcGISPortal arcgisPortal = await ArcGISPortal.CreateAsync(new Uri(ServerUrl));
+                Esri.ArcGISRuntime.ArcGISRuntimeEnvironment.SetLicense(arcgisPortal.PortalInfo.LicenseInfo);
                 // Get a web map portal item using its ID
                 // If the item is secured (not shared publicly) the user will be challenged for credentials at this point
                 PortalItem portalItem = await PortalItem.CreateAsync(arcgisPortal, WebMapId);
@@ -137,6 +168,8 @@ namespace OAuth
                 throw (ex);
             }
 
+
+
             return credential;
         }
     }
@@ -157,7 +190,7 @@ namespace OAuth
         private string _callbackUrl;
         // URL that handles the OAuth request
         private string _authorizeUrl;
-        
+
         // Function to handle authorization requests, takes the URIs for the secured service, the authorization endpoint, and the redirect URI
         public Task<IDictionary<string, string>> AuthorizeAsync(Uri serviceUri, Uri authorizeUri, Uri callbackUri)
         {

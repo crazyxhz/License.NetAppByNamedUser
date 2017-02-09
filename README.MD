@@ -22,7 +22,42 @@ This demo will show you step by step setup of OAuth authentication using ArcGIS 
 ![](https://ooo.0o0.ooo/2017/02/09/589c27a70117f.jpg)
 8. Build and run OAuth project. Done!
 ![](https://ooo.0o0.ooo/2017/02/09/589c28239f45b.jpg)
+9. The Water Mark is gone.
+![](https://ooo.0o0.ooo/2017/02/09/589c30a5edf26.jpg)
 
+##Licensing code
+```csharp
+// Challenge the user for portal credentials (OAuth credential request for arcgis.com)
+            CredentialRequestInfo loginInfo = new CredentialRequestInfo();
+
+            // Use the OAuth implicit grant flow
+            loginInfo.GenerateTokenOptions = new GenerateTokenOptions
+            {
+                TokenAuthenticationType = TokenAuthenticationType.OAuthImplicit
+            };
+
+            // Indicate the url (portal) to authenticate with (ArcGIS Online)
+            loginInfo.ServiceUri = new Uri("https://www.arcgis.com/sharing/rest");
+
+
+            // Call GetCredentialAsync on the AuthenticationManager to invoke the challenge handler
+            Credential cred = await AuthenticationManager.Current.GetCredentialAsync(loginInfo, false);
+
+            // Connect to the portal (ArcGIS Online) using the credential
+            ArcGISPortal arcgisPortal = await ArcGISPortal.CreateAsync(loginInfo.ServiceUri, cred);
+
+            // Get LicenseInfo from the portal
+            Esri.ArcGISRuntime.LicenseInfo licenseInfo = arcgisPortal.PortalInfo.LicenseInfo;
+            var licenseJson = licenseInfo.ToJson();
+            using (StreamWriter outputFile = new StreamWriter(@"lincese.json"))
+            {
+                // you can save the license file for latter offline use.
+                outputFile.WriteLine(licenseJson);
+            }
+            // ... code here to license the app immediately and/or save the license (JSON string) to take the app offline ...
+            // License the app using the license info
+            Esri.ArcGISRuntime.ArcGISRuntimeEnvironment.SetLicense(licenseInfo);
+```
 
 ##System Requirements
 - Visual Studio 2015
